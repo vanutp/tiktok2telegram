@@ -4,7 +4,6 @@ import { HashTag } from "./hash/parser";
 import { HashProcessor } from "./hash/processor";
 import { logger } from "./logging";
 import { ImmediateRecycler, IRecycler } from "./recycler";
-import { IReencoder, NoopEncoder } from "./reencoder";
 import { Scheduler } from "./scheduler";
 import { SetTimeoutScheduler } from "./scheduler/setTimeout";
 import { Storage } from "./storage";
@@ -13,6 +12,7 @@ import { TelegramApi } from "./telegram/impl";
 import { ITikTokApi } from "./tiktok/api";
 import { ZetreexTikTokApi } from "./tiktok/zetreex";
 import { Artifact, Video, VideoMap } from "./types";
+import { downloadAudioTiktok } from './cobalt/downloadAudioTiktok'
 
 export class Server {
   private lastBadRequests = 0;
@@ -23,7 +23,6 @@ export class Server {
     private telegram: ITelegramApi = new TelegramApi(),
     private hash: HashProcessor = new HashProcessor(),
     private downloader: IDownloader = new AxiosDownloader(),
-    private reencoder: IReencoder = NoopEncoder,
     private scheduler: Scheduler = new SetTimeoutScheduler(),
     private recycler: IRecycler = ImmediateRecycler,
     private dry: boolean = process.env.TIKTOK_SERVER_DRY_RUN === "true"
@@ -88,38 +87,28 @@ export class Server {
   }
 
   private async processVideo(video: Video): Promise<void> {
-    let ogArtifact: Artifact;
+    let artifacts: Artifact[];
     try {
-      ogArtifact = await this.downloadVideo(video);
+      artifacts = await this.downloadVideo(video);
     } catch (e) {
       // TODO remember bad videos?
       logger.error(`Couldn't download ${video.id}`, e);
       this.telegram.sendMessage(`Не удалось скачать ${video.url}`);
       return;
     }
-    let artifact: Artifact = ogArtifact;
-    try {
-      artifact = await this.reencoder.reencode(ogArtifact);
-    } catch (e) {
-      logger.error(`Couldn't encode ${video.url}`, e);
-      this.telegram.sendMessage(`Не удалось перекодировать ${video.url}`);
-      return;
-    } finally {
-      if (ogArtifact !== artifact) {
-        this.recycle(ogArtifact);
-      }
-    }
     if (this.dry) {
       return;
     }
     try {
-      await this.uploadVideo(video, artifact);
+      await this.uploadVideo(video, artifacts);
     } catch (e) {
       logger.error(`Couldn't upload ${video.id}`, e);
       this.telegram.sendMessage(`Не удалось загрузить ${video.url}`);
       return;
     } finally {
-      this.recycle(artifact);
+      for (const artifact of artifacts) {
+        this.recycle(artifact);
+      }
     }
     try {
       await this.storage.addToPostedVideoIds(video.id);
@@ -132,11 +121,17 @@ export class Server {
     }
   }
 
-  private async downloadVideo({ id, sourceUrl }: Video): Promise<Artifact> {
-    logger.info(`Downloading ${id}`);
-    const artifact = await this.downloader.download(sourceUrl);
+  private async downloadVideo({ id, sourceUrl }: Video): Promise<Artifact[]> {
+    let artifacts: Artifact[];
+    if (sourceUrl.endsWith(".mp3") || sourceUrl.includes("-music-")) {
+      logger.info(`Downloading ${id} (photos)`);
+      artifacts = await downloadAudioTiktok(id);
+    } else {
+      logger.info(`Downloading ${id} (video)`);
+      artifacts = [await this.downloader.download(sourceUrl)];
+    }
     logger.info(`Download finished ${id}`);
-    return artifact;
+    return artifacts;
   }
 
   private async extractHashTags({
@@ -155,13 +150,12 @@ export class Server {
 
   private async uploadVideo(
     video: Video,
-    { path, contentType }: Artifact
+    artifacts: Artifact[]
   ): Promise<void> {
     logger.info(`Uploading ${video.id}`);
     return await this.telegram.sendVideo({
+      artifacts,
       video,
-      path,
-      contentType,
       tags: await this.extractHashTags(video),
     });
   }

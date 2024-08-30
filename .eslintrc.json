@@ -4,7 +4,10 @@
   "plugins": ["@typescript-eslint"],
   "root": true,
   "ignorePatterns": [
-    "build/**",
+    "dist/**",
     "/*.js"
-  ]
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off"
+  }
 }

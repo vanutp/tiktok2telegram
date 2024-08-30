@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from "axios";
-import { logger } from "../logging";
 
 import { Url, VideoMap } from "../types";
 import { ITikTokApi } from "./api";
@@ -34,14 +33,6 @@ export class ZetreexTikTokApi implements ITikTokApi {
     );
     const map: VideoMap = new Map();
     data.posts
-      .filter((post) => {
-        const playLink = post.play_links[0];
-        if (playLink.endsWith(".mp3") || playLink.includes("-music-")) {
-          logger.info(`Filtering audio-only TikTok: ${post.web_link}`);
-          return false;
-        }
-        return true;
-      })
       .forEach((post) =>
         map.set(post.aweme_id, {
           __og: post,

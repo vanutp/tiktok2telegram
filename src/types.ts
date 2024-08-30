@@ -14,5 +14,7 @@ export type VideoMap = Map<VideoId, Video>;
 
 export type Artifact = {
   path: FilePath;
-  contentType: ContentType | undefined;
+  contentType: ContentType;
 };
+
+export type StrObj = { [key: string]: string };

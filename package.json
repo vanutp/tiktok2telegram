@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest --verbose",
-    "start": "node build/main.js",
-    "dry": "TIKTOK_SERVER_DRY_RUN=true node build/main.js"
+    "start": "node dist/main.js",
+    "dry": "TIKTOK_SERVER_DRY_RUN=true node dist/main.js"
   },
   "keywords": [],
   "author": "turikhay",
@@ -15,16 +15,21 @@
   "dependencies": {
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
+    "ffmpeg-static": "^5.2.0",
+    "mime": "3",
     "node-telegram-bot-api": "^0.66.0",
     "redis": "^4.7.0",
     "semaphore-promise": "^1.4.2",
+    "set-cookie-parser": "^2.7.0",
     "winston": "^3.13.1"
   },
   "devDependencies": {
     "@tsconfig/node18": "^2.0.0",
     "@types/jest": "^29.5.12",
-    "@types/node": "^18.16.3",
+    "@types/mime": "3",
+    "@types/node": "^20.16.2",
     "@types/node-telegram-bot-api": "^0.64.7",
+    "@types/set-cookie-parser": "^2.4.10",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.57.0",
@@ -33,7 +38,7 @@
     "typescript": "^5.5.4"
   },
   "engines": {
-    "node": ">=18",
-    "pnpm": ">=8"
-  }
+    "node": ">=18"
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

@@ -1,5 +1,7 @@
 .env
-build/
+dist/
 node_modules/
 /docker-compose.override.yml
 /storage.json
+.idea/
+*.iml

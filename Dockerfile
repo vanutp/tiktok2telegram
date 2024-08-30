@@ -1,19 +1,19 @@
-FROM node:18-alpine
+FROM node:20-slim
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json* ./
+COPY package.json yarn.lock ./
 
-RUN npm ci
+RUN yarn
 
 COPY . .
 
 COPY .env.sample ./.env
 
-RUN npm run build
+RUN yarn build
 
 ENV NODE_ENV production
 
 USER node
 
-CMD npm run start
+CMD yarn start

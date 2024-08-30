@@ -1,8 +1,9 @@
-import { ITelegramApi, VideoUpload } from ".";
-import TelegramBot from "node-telegram-bot-api";
+import { ITelegramApi, VideoUpload } from "."
+import TelegramBot, { InputMedia } from 'node-telegram-bot-api'
 import { Semaphore } from "semaphore-promise";
 import { logger } from "../logging";
 import { HashTag } from "../hash/parser";
+import mime from 'mime'
 
 export type Chats = {
   author: string;
@@ -33,24 +34,45 @@ export class TelegramApi implements ITelegramApi {
   }
 
   async sendVideo({
-    path,
+    artifacts,
     video,
-    contentType,
     tags,
   }: VideoUpload): Promise<void> {
     const release = await this.semaphore.acquire();
     try {
-      await this.bot.sendVideo(
+      await this.bot.sendMediaGroup(
         this.chats.targetChannel,
-        path,
-        {
-          caption: processCaption(video.url, tags),
-          parse_mode: "MarkdownV2",
-        },
-        {
-          filename: `${video.id}.mp4`,
-          contentType,
-        }
+        artifacts.map((artifact, i) => {
+          let res: InputMedia
+          const ext = mime.getExtension(artifact.contentType)
+          const filename = artifacts.length > 1 ? `${video.id}_${i}.${ext}` : `${video.id}.${ext}`
+          const commonOptions = {
+            media: artifact.path,
+            fileOptions: {
+              filename,
+              contentType: artifact.contentType,
+            },
+          }
+          if (artifact.contentType.startsWith('video/')) {
+            res = {
+              type: 'video',
+              ...commonOptions,
+            }
+          } else if (artifact.contentType.startsWith('image/')) {
+            res = {
+              type: 'photo',
+              ...commonOptions,
+            }
+          } else {
+            console.error(`Unknown contentType ${artifact.contentType}`)
+            return null
+          }
+          if (i == 0) {
+            res.caption = processCaption(video.url, tags)
+            res.parse_mode = "MarkdownV2"
+          }
+          return res
+        }).filter(artifact => artifact != null),
       );
     } finally {
       release();
