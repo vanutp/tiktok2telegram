@@ -92,6 +92,9 @@ export async function downloadAudioTiktok(id: string): Promise<Artifact[]> {
         filterAnimations += `${from}${to}xfade=transition=slideleft:duration=${TRANSITION_DURATION}:offset=${(FRAME_DURATION - TRANSITION_DURATION) * i}${target}`
       }
     }
+    if (imagePaths.length == 1) {
+      filterAnimations = '[cr0]null[v]'
+    }
     ffmpegCmd.push(
       '-i', audioPath,
       '-filter_complex',
