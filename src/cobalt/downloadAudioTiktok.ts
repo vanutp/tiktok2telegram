@@ -1,12 +1,14 @@
 // https://github.com/imputnet/cobalt/blob/afa33c404355e1a00d884a2db837233bca54f7f6/src/modules/processing/services/tiktok.js
 import { Artifact } from '../types'
-import { Cookie } from '../cobalt/cookie'
-import { updateCookie } from '../cobalt/cookieManager'
+import { Cookie } from './cookie'
+import { updateCookie } from './cookieManager'
 import { AxiosDownloader } from '../downloader/axios'
 import * as child_process from 'node:child_process'
 import { DefaultTempFileProvider } from '../tmp'
 import { ImmediateRecycler } from '../recycler'
 import ffmpegPath from 'ffmpeg-static'
+import axios from 'axios'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 
 if (!ffmpegPath) {
   throw new Error('ffmpeg from ffmpeg-static is null')
@@ -18,16 +20,19 @@ export async function downloadAudioTiktok(id: string): Promise<Artifact[]> {
   const cookie = new Cookie({})
 
   // should always be /video/, even for photos
-  const res = await fetch(`https://tiktok.com/@i/video/${id}`, {
+  const agent = process.env.PROXY ? new SocksProxyAgent(process.env.PROXY) : undefined
+  const res = await axios.get(`https://tiktok.com/@i/video/${id}`, {
     headers: {
       'user-agent': genericUserAgent,
       cookie: cookie.toString(),
     },
+    httpAgent: agent,
+    httpsAgent: agent,
   })
   updateCookie(cookie, res.headers)
   const downloader = new AxiosDownloader({ cookie: cookie.toString() })
 
-  const html = await res.text()
+  const html = res.data
 
   const json = html
     .split('<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">')[1]

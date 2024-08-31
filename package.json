@@ -21,6 +21,7 @@
     "redis": "^4.7.0",
     "semaphore-promise": "^1.4.2",
     "set-cookie-parser": "^2.7.0",
+    "socks-proxy-agent": "^8.0.4",
     "winston": "^3.13.1"
   },
   "devDependencies": {

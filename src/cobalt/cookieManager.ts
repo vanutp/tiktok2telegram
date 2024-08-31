@@ -2,10 +2,11 @@
 import { Cookie } from './cookie'
 import { parse as parseSetCookie, splitCookiesString } from 'set-cookie-parser';
 import { StrObj } from '../types'
+import { AxiosResponseHeaders, RawAxiosResponseHeaders } from 'axios'
 
-export function updateCookie(cookie: Cookie, headers: Headers) {
+export function updateCookie(cookie: Cookie, headers: RawAxiosResponseHeaders | AxiosResponseHeaders) {
   if (!cookie) return;
-  const setCookieHeader = headers.get('set-cookie')
+  const setCookieHeader = headers['set-cookie']
   if (!setCookieHeader) return;
 
   const parsed = parseSetCookie(
