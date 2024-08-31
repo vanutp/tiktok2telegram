@@ -6,7 +6,10 @@ import { processTags, TelegramApi } from "../../src/telegram/impl";
 test.skip("sendMessage", async () => {
   const api = new TelegramApi();
   await api.sendVideo({
-    path: "/home/turikhay/Y_9fidLK_r_21.mp4",
+    artifacts: [{
+      path: "/home/turikhay/Y_9fidLK_r_21.mp4",
+      contentType: "video/mp4",
+    }],
     video: {
       __og: "test download",
       sourceUrl: "https://foo/download",
@@ -14,7 +17,6 @@ test.skip("sendMessage", async () => {
       id: "Y_9fidLK_r_21",
       description: "hello #foo #bar",
     },
-    contentType: "video/mp4",
     tags: new Set(["#foo", "#bar"]),
   });
 }, 60000);
