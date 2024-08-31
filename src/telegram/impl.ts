@@ -70,6 +70,9 @@ export class TelegramApi implements ITelegramApi {
           if (i == 0) {
             res.caption = processCaption(video.url, tags)
             res.parse_mode = "MarkdownV2"
+          } else {
+            // images sent alongside merged video in photo tiktoks
+            res.has_spoiler = true
           }
           return res
         }).filter(artifact => artifact != null),
