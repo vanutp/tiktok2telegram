@@ -74,6 +74,7 @@ export class TelegramApi implements ITelegramApi {
       return res
     }).filter(artifact => artifact != null)
     try {
+      let i = 0
       while (artifacts.length > 0) {
         const toSend = artifacts.splice(0, 10)
         await this.bot.sendMediaGroup(
@@ -81,8 +82,9 @@ export class TelegramApi implements ITelegramApi {
           toSend,
         );
         if (artifacts.length > 0) {
-          await new Promise(resolve => setTimeout(resolve, 10_000))
+          await new Promise(resolve => setTimeout(resolve, 10_000 + i * 20_000))
         }
+        i += 1
       }
     } finally {
       release();
