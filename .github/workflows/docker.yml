@@ -27,3 +27,12 @@ jobs:
         with:
           push: true
           tags: ghcr.io/vanutp/tiktok2telegram:latest
+      - name: Deploy
+        env:
+          UPDATE_POST_KEY: ${{ secrets.UPDATE_POST_KEY }}
+        run: |
+          curl --request POST \
+               --url https://vhap-update.vanutp.dev/update \
+               --header "Content-Type: application/json" \
+               --data '{"key":"'$UPDATE_POST_KEY'"}' \
+               --fail
