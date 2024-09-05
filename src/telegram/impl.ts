@@ -34,49 +34,53 @@ export class TelegramApi implements ITelegramApi {
   }
 
   async sendVideo({
-    artifacts,
+    artifacts: _artifacts,
     video,
     tags,
   }: VideoUpload): Promise<void> {
     const release = await this.semaphore.acquire();
+    const artifacts = _artifacts.map((artifact, i) => {
+      let res: InputMedia
+      const ext = mime.getExtension(artifact.contentType)
+      const filename = _artifacts.length > 1 ? `${video.id}_${i}.${ext}` : `${video.id}.${ext}`
+      const commonOptions = {
+        media: artifact.path,
+        fileOptions: {
+          filename,
+          contentType: artifact.contentType,
+        },
+      }
+      if (artifact.contentType.startsWith('video/')) {
+        res = {
+          type: 'video',
+          ...commonOptions,
+        }
+      } else if (artifact.contentType.startsWith('image/')) {
+        res = {
+          type: 'photo',
+          ...commonOptions,
+        }
+      } else {
+        console.error(`Unknown contentType ${artifact.contentType}`)
+        return null
+      }
+      if (i == 0) {
+        res.caption = processCaption(video.url, tags)
+        res.parse_mode = "MarkdownV2"
+      } else {
+        // images sent alongside merged video in photo tiktoks
+        res.has_spoiler = true
+      }
+      return res
+    }).filter(artifact => artifact != null)
     try {
-      await this.bot.sendMediaGroup(
-        this.chats.targetChannel,
-        artifacts.map((artifact, i) => {
-          let res: InputMedia
-          const ext = mime.getExtension(artifact.contentType)
-          const filename = artifacts.length > 1 ? `${video.id}_${i}.${ext}` : `${video.id}.${ext}`
-          const commonOptions = {
-            media: artifact.path,
-            fileOptions: {
-              filename,
-              contentType: artifact.contentType,
-            },
-          }
-          if (artifact.contentType.startsWith('video/')) {
-            res = {
-              type: 'video',
-              ...commonOptions,
-            }
-          } else if (artifact.contentType.startsWith('image/')) {
-            res = {
-              type: 'photo',
-              ...commonOptions,
-            }
-          } else {
-            console.error(`Unknown contentType ${artifact.contentType}`)
-            return null
-          }
-          if (i == 0) {
-            res.caption = processCaption(video.url, tags)
-            res.parse_mode = "MarkdownV2"
-          } else {
-            // images sent alongside merged video in photo tiktoks
-            res.has_spoiler = true
-          }
-          return res
-        }).filter(artifact => artifact != null),
-      );
+      while (artifacts.length > 0) {
+        const toSend = artifacts.splice(0, 10)
+        await this.bot.sendMediaGroup(
+          this.chats.targetChannel,
+          toSend,
+        );
+      }
     } finally {
       release();
     }
