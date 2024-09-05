@@ -80,6 +80,9 @@ export class TelegramApi implements ITelegramApi {
           this.chats.targetChannel,
           toSend,
         );
+        if (artifacts.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 10_000))
+        }
       }
     } finally {
       release();
