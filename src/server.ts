@@ -13,6 +13,7 @@ import { ITikTokApi } from "./tiktok/api";
 import { ZetreexTikTokApi } from "./tiktok/zetreex";
 import { Artifact, Video, VideoMap } from "./types";
 import { downloadAudioTiktok } from './cobalt/downloadAudioTiktok'
+import { sleep } from './utils'
 
 export class Server {
   private lastBadRequests = 0;
@@ -76,10 +77,10 @@ export class Server {
     logger.info(
       `Found new videos:\n${JSON.stringify(newVideos, undefined, 2)}`
     );
-    const videosAwait: Promise<void>[] = newVideos.map((video) =>
-      this.processVideo(video)
-    );
-    await Promise.all(videosAwait);
+    for (const video of newVideos) {
+      await this.processVideo(video);
+      await sleep(10_000)
+    }
     logger.info(`Uploads finished`);
     if (this.dry) {
       logger.warn("Dry-run enabled. Video were not actually uploaded");

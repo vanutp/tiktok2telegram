@@ -4,6 +4,7 @@ import { Semaphore } from "semaphore-promise";
 import { logger } from "../logging";
 import { HashTag } from "../hash/parser";
 import mime from 'mime'
+import { sleep } from '../utils'
 
 export type Chats = {
   author: string;
@@ -82,7 +83,7 @@ export class TelegramApi implements ITelegramApi {
           toSend,
         );
         if (artifacts.length > 0) {
-          await new Promise(resolve => setTimeout(resolve, 10_000 + i * 20_000))
+          await sleep(10_000 + i * 20_000)
         }
         i += 1
       }
