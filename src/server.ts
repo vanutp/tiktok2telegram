@@ -54,15 +54,15 @@ export class Server {
     } catch (e) {
       logger.error("TikTok service error", e);
       this.lastBadRequests++;
-      if (this.lastBadRequests == 2) {
-        this.telegram.sendMessage("Сервис TikTok недоступен");
-      }
+      //if (this.lastBadRequests == 2) {
+      //  this.telegram.sendMessage("Сервис TikTok недоступен");
+      //}
       return;
     }
-    if (this.lastBadRequests > 2) {
-      logger.info("TikTok is now available");
-      this.telegram.sendMessage("Сервис TikTok восстановлен");
-    }
+    //if (this.lastBadRequests > 2) {
+    //  logger.info("TikTok is now available");
+    //  this.telegram.sendMessage("Сервис TikTok восстановлен");
+    //}
     this.lastBadRequests = 0;
     const newVideoIds = await this.storage.getNonPostedVideoIds(
       videoMap.keys()
